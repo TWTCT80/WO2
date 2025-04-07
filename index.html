@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <title>Workout Journal</title>
+  <style>
+    :root {
+      --primary: #dc143c;
+      --primary-dark: #a10e2b;
+      --bg: #111;
+      --bg-light: #1a1a1a;
+      --bg-lighter: #2a2a2a;
+      --text: white;
+      --text-light: #ccc;
+      --border: #333;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.5;
+    }
+    
+    nav {
+      background-color: #000;
+      text-align: center;
+      padding: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+    
+    nav a {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 18px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    
+    nav a:hover, nav a.active {
+      background-color: var(--bg-light);
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .section {
+      display: none;
+    }
+    
+    .section.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    h2 {
+      color: var(--primary);
+      margin-top: 0;
+    }
+    
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    button.secondary {
+      background-color: var(--bg-light);
+      border: 1px solid var(--border);
+    }
+    
+    button.secondary:hover {
+      background-color: var(--bg-lighter);
+    }
+    
+    input, select {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-light);
+      color: var(--text);
+      font-size: 16px;
+      margin-top: 6px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    
+    .set-container {
+      display: flex;
+      gap: 8px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+    
+    .set {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background-color: var(--bg-lighter);
+      color: var(--text);
+      text-align: center;
+      line-height: 42px;
+      cursor: pointer;
+      font-weight: bold;
+      user-select: none;
+      transition: background-color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+    
+    .set.partial { background-color: #777; }
+    .set.full { background-color: green; }
+    
+    .routine-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    
+    .card {
+      background-color: var(--bg-light);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .exercise-card {
+      background-color: var(--bg-lighter);
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    
+    .exercise-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: var(--text-light);
+    }
+    
+    .log-entry {
+      margin-bottom: 25px;
+    }
+    
+    .log-date {
+      color: var(--primary);
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .log-exercise {
+      margin-left: 15px;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .routine-name-edit {
+      background-color: var(--bg-light);
+      color: var(--text);
+      border: 1px solid var(--primary);
+      padding: 5px;
+      font-size: 1.17em;
+      font-weight: bold;
+      margin: 0;
+      width: auto;
+    }
+    
+    @media (max-width: 600px) {
+      nav {
+        padding: 10px 5px;
+        gap: 5px;
+      }
+      
+      nav a {
+        font-size: 16px;
+        padding: 5px 8px;
+      }
+      
+      .container {
+        padding: 15px;
+      }
+      
+      .set {
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+      }
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="#workout" class="active" data-section="workout">Workout</a>
+  <a href="#log" data-section="log">Log</a>
+  <a href="#settings" data-section="settings">Settings</a>
+</nav>
+
+<div class="container">
+  <!-- Workout Section -->
+  <div id="workout" class="section active">
+    <h2>Today's Workout</h2>
+    <div class="routine-buttons" id="routineButtons"></div>
+    <div id="todayExercises"></div>
+    <div class="text-center">
+      <button id="finishWorkoutBtn">✅ Finish Workout</button>
+    </div>
+  </div>
+
+  <!-- Log Section -->
+  <div id="log" class="section">
+    <h2>Workout History</h2>
+    <div id="logList"></div>
+  </div>
+
+  <!-- Settings Section -->
+  <div id="settings" class="section">
+    <h2>Settings</h2>
+    
+    <div class="card">
+      <h3>Create New Routine</h3>
+      <div class="form-group">
+        <label for="newRoutineName">Routine name:</label>
+        <input type="text" id="newRoutineName" placeholder="e.g. Push Day" />
+      </div>
+      <button id="createRoutineBtn">+ Create Routine</button>
+    </div>
+    
+    <div id="routineSettingsContainer"></div>
+  </div>
+</div>
+
+<script>
+class WorkoutTracker {
+  constructor() {
+    // Initialize data keys with versioning
+    this.STORAGE_KEYS = {
+      WORKOUT_DATA: "workout_data_v3",
+      WORKOUT_LOG: "workout_log_v3",
+      ACTIVE_ROUTINE: "active_routine_v3"
+    };
+    
+    // Load or initialize data
+    this.data = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.WORKOUT_DATA)) || {
+      "Push Day": this.createDefaultRoutine("Push Day"),
+      "Pull Day": this.createDefaultRoutine("Pull Day")
+    };
+    
+    this.log = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.WORKOUT_LOG)) || [];
+    this.activeRoutine = localStorage.getItem(this.STORAGE_KEYS.ACTIVE_ROUTINE) || Object.keys(this.data)[0];
+    
+    // Initialize UI
+    this.initNavigation();
+    this.renderRoutineButtons();
+    this.renderWorkout();
+    this.renderLog();
+    this.renderRoutineSettings();
+    
+    // Event listeners
+    document.getElementById('finishWorkoutBtn').addEventListener('click', () => this.finishWorkout());
+    document.getElementById('createRoutineBtn').addEventListener('click', () => this.createNewRoutine());
+    
+    // Add event delegation for dynamically created buttons
+    document.getElementById('routineSettingsContainer').addEventListener('click', (e) => {
+      // Handle delete routine buttons
+      if (e.target.classList.contains('delete-routine')) {
+        const routineName = e.target.dataset.routine;
+        this.deleteRoutine(routineName);
+      }
+      
+      // Handle remove exercise buttons
+      if (e.target.classList.contains('remove-exercise')) {
+        const routineName = e.target.dataset.routine;
+        const index = parseInt(e.target.dataset.index);
+        this.removeExerciseFromRoutine(routineName, index);
+      }
+    });
+  }
+  
+  createDefaultRoutine(name) {
+    return [
+      {
+        id: this.generateId(),
+        name: "Bench Press",
+        weight: 60,
+        setCount: 4,
+        targetReps: 8,
+        sets: Array(4).fill(0)
+      },
+      {
+        id: this.generateId(),
+        name: "Overhead Press",
+        weight: 40,
+        setCount: 3,
+        targetReps: 8,
+        sets: Array(3).fill(0)
+      },
+      {
+        id: this.generateId(),
+        name: "Tricep Dips",
+        weight: 0,
+        setCount: 3,
+        targetReps: 10,
+        sets: Array(3).fill(0)
+      }
+    ];
+  }
+  
+  generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+  
+  saveData() {
+    localStorage.setItem(this.STORAGE_KEYS.WORKOUT_DATA, JSON.stringify(this.data));
+    localStorage.setItem(this.STORAGE_KEYS.WORKOUT_LOG, JSON.stringify(this.log));
+    localStorage.setItem(this.STORAGE_KEYS.ACTIVE_ROUTINE, this.activeRoutine);
+  }
+  
+  initNavigation() {
+    document.querySelectorAll('nav a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const sectionId = link.getAttribute('data-section');
+        this.showSection(sectionId);
+      });
+    });
+  }
+  
+  showSection(sectionId) {
+    // Update active nav link
+    document.querySelectorAll('nav a').forEach(link => {
+      link.classList.toggle('active', link.getAttribute('data-section') === sectionId);
+    });
+    
+    // Show selected section
+    document.querySelectorAll('.section').forEach(section => {
+      section.classList.toggle('active', section.id === sectionId);
+    });
+  }
+  
+  renderRoutineButtons() {
+    const container = document.getElementById("routineButtons");
+    container.innerHTML = "";
+    
+    Object.keys(this.data).forEach(name => {
+      const btn = document.createElement("button");
+      btn.textContent = name;
+      btn.classList.toggle("active", name === this.activeRoutine);
+      btn.classList.add("secondary");
+      btn.addEventListener('click', () => {
+        this.activeRoutine = name;
+        this.saveData();
+        this.renderWorkout();
+        this.renderRoutineButtons();
+      });
+      container.appendChild(btn);
+    });
+  }
+  
+  renderWorkout() {
+    const container = document.getElementById("todayExercises");
+    container.innerHTML = "";
+    
+    if (!this.data[this.activeRoutine] || this.data[this.activeRoutine].length === 0) {
+      container.innerHTML = `<div class="card">No exercises in this routine. Add some in Settings.</div>`;
+      return;
+    }
+    
+    this.data[this.activeRoutine].forEach(exercise => {
+      const card = document.createElement("div");
+      card.className = "exercise-card fade-in";
+      
+      // Exercise header with name and weight
+      const header = document.createElement("div");
+      header.className = "card-header";
+      header.innerHTML = `
+        <h3>${exercise.name}</h3>
+        <div>${exercise.weight} kg</div>
+      `;
+      card.appendChild(header);
+      
+      // Sets display
+      const setsDiv = document.createElement("div");
+      setsDiv.className = "set-container";
+      
+      // Ensure sets array matches setCount
+      if (exercise.sets.length !== exercise.setCount) {
+        exercise.sets = Array(exercise.setCount).fill(0);
+        this.saveData();
+      }
+      
+      exercise.sets.forEach((reps, index) => {
+        const setElement = document.createElement("div");
+        setElement.className = "set";
+        setElement.textContent = reps;
+        
+        if (reps === exercise.targetReps) {
+          setElement.classList.add("full");
+        } else if (reps > 0) {
+          setElement.classList.add("partial");
+        }
+        
+        // Click/Tap to increment reps
+        setElement.addEventListener('click', () => {
+          exercise.sets[index] = (exercise.sets[index] + 1) % (exercise.targetReps + 1);
+          this.saveData();
+          this.renderWorkout();
+        });
+        
+        // Long press handling for both mouse and touch
+        let pressTimer;
+        
+        const startPress = () => {
+          pressTimer = setTimeout(() => {
+            exercise.sets[index] = exercise.targetReps;
+            this.saveData();
+            this.renderWorkout();
+          }, 800); // 800ms delay for long press
+        };
+        
+        const cancelPress = () => {
+          clearTimeout(pressTimer);
+        };
+        
+        // Mouse events
+        setElement.addEventListener('mousedown', startPress);
+        setElement.addEventListener('mouseup', cancelPress);
+        setElement.addEventListener('mouseleave', cancelPress);
+        
+        // Touch events
+        setElement.addEventListener('touchstart', startPress);
+        setElement.addEventListener('touchend', cancelPress);
+        setElement.addEventListener('touchcancel', cancelPress);
+        
+        // Prevent context menu on long press
+        setElement.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        setsDiv.appendChild(setElement);
+      });
+      
+      card.appendChild(setsDiv);
+      container.appendChild(card);
+    });
+  }
+  
+  finishWorkout() {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const routineName = this.activeRoutine;
+    const exercises = [];
+    
+    this.data[routineName].forEach(exercise => {
+      // Check if all sets were completed
+      const allSetsCompleted = exercise.sets.every(reps => reps === exercise.targetReps);
+      
+      // Log the exercise performance
+      exercises.push({
+        name: exercise.name,
+        weight: exercise.weight,
+        reps: [...exercise.sets],
+        completed: allSetsCompleted
+      });
+      
+      // Increase weight if all sets were completed
+      if (allSetsCompleted) {
+        exercise.weight += 2.5;
+      }
+      
+      // Reset sets for next workout
+      exercise.sets = Array(exercise.setCount).fill(0);
+    });
+    
+    // Add to log
+    this.log.unshift({
+      date: today,
+      routine: routineName,
+      exercises: exercises
+    });
+    
+    this.saveData();
+    this.renderWorkout();
+    this.renderLog();
+    this.showSection('log');
+    
+    // Show completion message
+    alert(`Workout logged for ${today}!`);
+  }
+  
+  renderLog() {
+    const container = document.getElementById("logList");
+    container.innerHTML = "";
+    
+    if (this.log.length === 0) {
+      container.innerHTML = `<div class="card">No workouts logged yet.</div>`;
+      return;
+    }
+    
+    this.log.forEach(entry => {
+      const entryDiv = document.createElement("div");
+      entryDiv.className = "log-entry card";
+      
+      const dateDiv = document.createElement("div");
+      dateDiv.className = "log-date";
+      dateDiv.textContent = `${entry.date} - ${entry.routine}`;
+      entryDiv.appendChild(dateDiv);
+      
+      entry.exercises.forEach(ex => {
+        const exDiv = document.createElement("div");
+        exDiv.className = "log-exercise";
+        
+        const repsText = ex.reps.map(r => r === ex.reps[0] ? r : r).join(", ");
+        const completionIcon = ex.completed ? "✅" : "⚠️";
+        
+        exDiv.textContent = `${completionIcon} ${ex.name}: ${ex.weight} kg [${repsText}]`;
+        entryDiv.appendChild(exDiv);
+      });
+      
+      container.appendChild(entryDiv);
+    });
+  }
+  
+  createNewRoutine() {
+    const nameInput = document.getElementById("newRoutineName");
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+      alert("Please enter a routine name");
+      return;
+    }
+    
+    if (this.data[name]) {
+      alert("A routine with this name already exists");
+      return;
+    }
+    
+    this.data[name] = [];
+    this.saveData();
+    this.renderRoutineSettings();
+    this.renderRoutineButtons();
+    
+    // Clear input and show success
+    nameInput.value = "";
+    nameInput.focus();
+  }
+  
+  renderRoutineSettings() {
+    const container = document.getElementById("routineSettingsContainer");
+    container.innerHTML = "";
+    
+    Object.entries(this.data).forEach(([routineName, exercises]) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      
+      // Routine header with editable name and delete button
+      const header = document.createElement("div");
+      header.className = "card-header";
+      
+      const nameDisplay = document.createElement("h3");
+      nameDisplay.textContent = routineName;
+      nameDisplay.style.cursor = "pointer";
+      nameDisplay.addEventListener('click', () => {
+        this.editRoutineName(routineName, nameDisplay);
+      });
+      
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "secondary delete-routine";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.dataset.routine = routineName;
+      
+      header.append(nameDisplay, deleteBtn);
+      card.appendChild(header);
+      
+      // Exercises list
+      const exercisesList = document.createElement("div");
+      
+      if (exercises.length === 0) {
+        exercisesList.innerHTML = `<p>No exercises in this routine.</p>`;
+      } else {
+        exercises.forEach((exercise, index) => {
+          const exCard = document.createElement("div");
+          exCard.className = "exercise-card";
+          
+          exCard.innerHTML = `
+            <div class="form-group">
+              <label>Exercise Name</label>
+              <input type="text" value="${exercise.name}" 
+                data-routine="${routineName}" data-index="${index}" data-field="name" />
+            </div>
+            
+            <div class="form-group">
+              <label>Weight (kg)</label>
+              <input type="number" value="${exercise.weight}" 
+                data-routine="${routineName}" data-index="${index}" data-field="weight" />
+            </div>
+            
+            <div class="form-group">
+              <label>Sets</label>
+              <input type="number" value="${exercise.setCount}" min="1" 
+                data-routine="${routineName}" data-index="${index}" data-field="setCount" />
+            </div>
+            
+            <div class="form-group">
+              <label>Target Reps</label>
+              <input type="number" value="${exercise.targetReps}" min="1" 
+                data-routine="${routineName}" data-index="${index}" data-field="targetReps" />
+            </div>
+            
+            <button class="secondary remove-exercise" data-routine="${routineName}" data-index="${index}">
+              Remove Exercise
+            </button>
+          `;
+          
+          exercisesList.appendChild(exCard);
+        });
+      }
+      
+      // Add exercise button
+      const addButton = document.createElement("button");
+      addButton.textContent = "+ Add Exercise";
+      addButton.addEventListener('click', () => {
+        this.addExerciseToRoutine(routineName);
+      });
+      
+      card.append(exercisesList, addButton);
+      container.appendChild(card);
+    });
+    
+    // Add event listeners for input changes
+    container.addEventListener('change', (e) => {
+      if (e.target.tagName === 'INPUT') {
+        const routine = e.target.dataset.routine;
+        const index = parseInt(e.target.dataset.index);
+        const field = e.target.dataset.field;
+        let value = e.target.value;
+        
+        // Convert to number if appropriate
+        if (field === 'weight' || field === 'setCount' || field === 'targetReps') {
+          value = parseFloat(value);
+        }
+        
+        this.data[routine][index][field] = value;
+        
+        // If setCount changed, reset sets array
+        if (field === 'setCount') {
+          this.data[routine][index].sets = Array(value).fill(0);
+        }
+        
+        this.saveData();
+        this.renderWorkout();
+      }
+    });
+  }
+  
+  editRoutineName(oldName, nameElement) {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = oldName;
+    input.className = "routine-name-edit";
+    
+    // Replace the text with an input field
+    nameElement.replaceWith(input);
+    input.focus();
+    
+    const handleBlur = () => {
+      const newName = input.value.trim();
+      
+      if (newName && newName !== oldName) {
+        if (this.data[newName]) {
+          alert("A routine with this name already exists");
+          input.focus();
+          return;
+        }
+        
+        // Update the routine name
+        this.data[newName] = this.data[oldName];
+        delete this.data[oldName];
+        
+        // Update active routine if needed
+        if (this.activeRoutine === oldName) {
+          this.activeRoutine = newName;
+          localStorage.setItem(this.STORAGE_KEYS.ACTIVE_ROUTINE, newName);
+        }
+        
+        // Update log entries
+        this.log.forEach(entry => {
+          if (entry.routine === oldName) {
+            entry.routine = newName;
+          }
+        });
+        
+        this.saveData();
+        this.renderRoutineSettings();
+        this.renderRoutineButtons();
+        this.renderWorkout();
+        this.renderLog();
+      } else {
+        // Revert to original name display
+        input.replaceWith(nameElement);
+      }
+    };
+    
+    input.addEventListener('blur', handleBlur);
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleBlur();
+      }
+    });
+  }
+  
+  addExerciseToRoutine(routineName) {
+    this.data[routineName].push({
+      id: this.generateId(),
+      name: "New Exercise",
+      weight: 20,
+      setCount: 3,
+      targetReps: 8,
+      sets: Array(3).fill(0)
+    });
+    
+    this.saveData();
+    this.renderRoutineSettings();
+    this.renderWorkout();
+  }
+  
+  removeExerciseFromRoutine(routineName, index) {
+    if (confirm(`Remove this exercise from ${routineName}?`)) {
+      this.data[routineName].splice(index, 1);
+      this.saveData();
+      this.renderRoutineSettings();
+      this.renderWorkout();
+    }
+  }
+  
+  deleteRoutine(routineName) {
+    if (Object.keys(this.data).length <= 1) {
+      alert("You must have at least one routine");
+      return;
+    }
+    
+    if (confirm(`Delete the routine "${routineName}"? This cannot be undone.`)) {
+      delete this.data[routineName];
+      
+      // If we're deleting the active routine, switch to another one
+      if (this.activeRoutine === routineName) {
+        this.activeRoutine = Object.keys(this.data)[0];
+      }
+      
+      this.saveData();
+      this.renderRoutineSettings();
+      this.renderRoutineButtons();
+      this.renderWorkout();
+    }
+  }
+}
+
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  new WorkoutTracker();
+});
+</script>
+</body>
+</html>
